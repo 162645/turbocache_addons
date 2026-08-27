@@ -1,0 +1,122 @@
+groups:
+  - name: turbocache_alerts
+    interval: 30s
+    rules:
+      # 缓存命中率告警
+      - alert: LowCacheHitRate
+        expr: turbocache_cache_hit_rate < 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate on {{ $labels.instance }}"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} on instance {{ $labels.instance }}"
+
+      - alert: CriticalLowCacheHitRate
+        expr: turbocache_cache_hit_rate < 0.3
+        for: 5m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Critical low cache hit rate on {{ $labels.instance }}"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} on instance {{ $labels.instance }}"
+
+      # 缓存大小告警
+      - alert: CacheAlmostFull
+        expr: (turbocache_cache_size_bytes / 104857600) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Cache almost full on {{ $labels.instance }}"
+          description: "Cache is {{ $value | humanizePercentage }} full on instance {{ $labels.instance }}"
+
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: rate(turbocache_cache_errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "High error rate on {{ $labels.instance }}"
+          description: "Error rate is {{ $value }} errors/sec on instance {{ $labels.instance }}"
+
+      - alert: CriticalErrorRate
+        expr: rate(turbocache_cache_errors_total[5m]) > 50
+        for: 2m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Critical error rate on {{ $labels.instance }}"
+          description: "Error rate is {{ $value }} errors/sec on instance {{ $labels.instance }}"
+
+      # 高延迟告警
+      - alert: HighLatency
+        expr: turbocache_cache_get_duration_milliseconds{quantile="0.99"} > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "High P99 latency on {{ $labels.instance }}"
+          description: "P99 latency is {{ $value }}ms on instance {{ $labels.instance }}"
+
+      # 内存告警
+      - alert: HighMemoryUsage
+        expr: turbocache_heap_size_bytes / (1024*1024*1024) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanize }}GB on instance {{ $labels.instance }}"
+
+      # Goroutine 泄漏告警
+      - alert: GoroutineLeak
+        expr: turbocache_goroutines > 10000
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Possible goroutine leak on {{ $labels.instance }}"
+          description: "Goroutine count is {{ $value }} on instance {{ $labels.instance }}"
+
+      # 节点下线告警
+      - alert: NodeDown
+        expr: up{job="turbocache"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cluster
+        annotations:
+          summary: "TurboCache node is down"
+          description: "Instance {{ $labels.instance }} is down"
+
+      # 高驱逐率告警
+      - alert: HighEvictionRate
+        expr: rate(turbocache_cache_evictions_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "High eviction rate on {{ $labels.instance }}"
+          description: "Eviction rate is {{ $value }} evictions/sec on instance {{ $labels.instance }}"
+
+      # GC 压力告警
+      - alert: HighGCPressure
+        expr: rate(turbocache_gc_count_total[1m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High GC pressure on {{ $labels.instance }}"
+          description: "GC runs {{ $value }} times per second on instance {{ $labels.instance }}"

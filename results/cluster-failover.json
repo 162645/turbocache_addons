@@ -1,0 +1,186 @@
+{
+  "TotalOps": 1097348,
+  "SuccessOps": 1097348,
+  "FailedOps": 0,
+  "TotalDuration": 20001541541,
+  "AvgLatency": 1817062,
+  "MinLatency": 373250,
+  "MaxLatency": 105110167,
+  "P50Latency": 1573167,
+  "P95Latency": 3525541,
+  "P99Latency": 5722208,
+  "Throughput": 54863.171308601886,
+  "SuccessThroughput": 54863.171308601886,
+  "ErrorRate": 0,
+  "Servers": [
+    "127.0.0.1:7071",
+    "127.0.0.1:7072",
+    "127.0.0.1:7073"
+  ],
+  "Concurrency": 100,
+  "ValueSize": 128,
+  "ReadRatio": 1,
+  "KeyRange": 1000,
+  "Samples": [
+    {
+      "second": 0,
+      "operations": 60328,
+      "successful": 60328,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 10.580167
+    },
+    {
+      "second": 1,
+      "operations": 54768,
+      "successful": 54768,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 13.139125
+    },
+    {
+      "second": 2,
+      "operations": 44432,
+      "successful": 44432,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 105.110167
+    },
+    {
+      "second": 3,
+      "operations": 49355,
+      "successful": 49355,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 16.621417
+    },
+    {
+      "second": 4,
+      "operations": 53271,
+      "successful": 53271,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 101.736458
+    },
+    {
+      "second": 5,
+      "operations": 48640,
+      "successful": 48640,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 12.482
+    },
+    {
+      "second": 6,
+      "operations": 59394,
+      "successful": 59394,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 102.54875
+    },
+    {
+      "second": 7,
+      "operations": 49661,
+      "successful": 49661,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 14.781667
+    },
+    {
+      "second": 8,
+      "operations": 51044,
+      "successful": 51044,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 101.420292
+    },
+    {
+      "second": 9,
+      "operations": 59016,
+      "successful": 59016,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 12.174458
+    },
+    {
+      "second": 10,
+      "operations": 55662,
+      "successful": 55662,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 102.362917
+    },
+    {
+      "second": 11,
+      "operations": 58087,
+      "successful": 58087,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 11.563167
+    },
+    {
+      "second": 12,
+      "operations": 63207,
+      "successful": 63207,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 101.720334
+    },
+    {
+      "second": 13,
+      "operations": 46560,
+      "successful": 46560,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 15.975666
+    },
+    {
+      "second": 14,
+      "operations": 60272,
+      "successful": 60272,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 102.026333
+    },
+    {
+      "second": 15,
+      "operations": 53476,
+      "successful": 53476,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 14.994125
+    },
+    {
+      "second": 16,
+      "operations": 56750,
+      "successful": 56750,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 101.30375
+    },
+    {
+      "second": 17,
+      "operations": 61351,
+      "successful": 61351,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 10.383959
+    },
+    {
+      "second": 18,
+      "operations": 59479,
+      "successful": 59479,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 100.87925
+    },
+    {
+      "second": 19,
+      "operations": 52595,
+      "successful": 52595,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 12.145542
+    }
+  ]
+}

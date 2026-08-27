@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: turbocache
+    orgId: 1
+    folder: TurboCache
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

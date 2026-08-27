@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbocache
+  namespace: turbocache
+  labels:
+    app: turbocache
+spec:
+  type: ClusterIP
+  selector:
+    app: turbocache
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: grpc
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+    - name: metrics
+      port: 2112
+      targetPort: 2112
+      protocol: TCP
+  sessionAffinity: None
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbocache-headless
+  namespace: turbocache
+  labels:
+    app: turbocache
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: turbocache
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: grpc
+      port: 9090
+      targetPort: 9090
+    - name: metrics
+      port: 2112
+      targetPort: 2112

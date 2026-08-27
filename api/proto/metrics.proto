@@ -1,0 +1,303 @@
+syntax = "proto3";
+
+package metricspb;
+
+option go_package = "turbocache/api/generated/metricspb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// 监控指标服务定义
+service MetricsService {
+  // 获取实时指标
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+
+  // 获取历史指标
+  rpc GetHistoricalMetrics(GetHistoricalMetricsRequest) returns (GetHistoricalMetricsResponse);
+
+  // 流式推送指标
+  rpc StreamMetrics(StreamMetricsRequest) returns (stream MetricsSnapshot);
+
+  // 记录自定义指标
+  rpc RecordMetric(RecordMetricRequest) returns (RecordMetricResponse);
+
+  // 获取聚合指标
+  rpc GetAggregatedMetrics(GetAggregatedMetricsRequest) returns (GetAggregatedMetricsResponse);
+
+  // 重置指标
+  rpc ResetMetrics(ResetMetricsRequest) returns (ResetMetricsResponse);
+}
+
+// 获取指标请求
+message GetMetricsRequest {
+  string node_id = 1;
+  repeated string metric_names = 2;
+  map<string, string> labels = 3;
+}
+
+message GetMetricsResponse {
+  MetricsSnapshot snapshot = 1;
+}
+
+// 历史指标请求
+message GetHistoricalMetricsRequest {
+  string node_id = 1;
+  repeated string metric_names = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  google.protobuf.Duration interval = 5;
+}
+
+message GetHistoricalMetricsResponse {
+  repeated MetricsSnapshot snapshots = 1;
+}
+
+// 流式指标请求
+message StreamMetricsRequest {
+  string node_id = 1;
+  google.protobuf.Duration interval = 2;
+  repeated string metric_names = 3;
+}
+
+// 记录指标请求
+message RecordMetricRequest {
+  string node_id = 1;
+  string metric_name = 2;
+  double value = 3;
+  map<string, string> labels = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message RecordMetricResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 聚合指标请求
+message GetAggregatedMetricsRequest {
+  repeated string node_ids = 1;
+  repeated string metric_names = 2;
+  AggregationType aggregation = 3;
+  google.protobuf.Timestamp start_time = 4;
+  google.protobuf.Timestamp end_time = 5;
+}
+
+message GetAggregatedMetricsResponse {
+  map<string, AggregatedMetric> metrics = 1;
+}
+
+// 重置指标请求
+message ResetMetricsRequest {
+  string node_id = 1;
+  repeated string metric_names = 2;
+}
+
+message ResetMetricsResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 指标快照
+message MetricsSnapshot {
+  string node_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+
+  // 缓存指标
+  CacheMetrics cache = 3;
+
+  // 性能指标
+  PerformanceMetrics performance = 4;
+
+  // 系统指标
+  SystemMetrics system = 5;
+
+  // 集群指标
+  ClusterMetrics cluster = 6;
+
+  // 自定义指标
+  map<string, double> custom = 7;
+}
+
+// 缓存指标
+message CacheMetrics {
+  // 基本统计
+  int64 total_keys = 1;
+  int64 total_size_bytes = 2;
+  int64 total_entries = 3;
+
+  // 命中率
+  int64 hit_count = 4;
+  int64 miss_count = 5;
+  double hit_rate = 6;
+
+  // 操作统计
+  int64 get_count = 7;
+  int64 set_count = 8;
+  int64 delete_count = 9;
+
+  // 淘汰统计
+  int64 eviction_count = 10;
+  int64 expired_count = 11;
+
+  // L1/L2统计
+  LevelMetrics l1 = 12;
+  LevelMetrics l2 = 13;
+
+  // 热点数据
+  repeated HotKey hot_keys = 14;
+
+  // 错误统计
+  int64 error_count = 15;
+  map<string, int64> error_types = 16;
+}
+
+// 层级指标
+message LevelMetrics {
+  int64 total_keys = 1;
+  int64 total_size_bytes = 2;
+  int64 hit_count = 3;
+  int64 miss_count = 4;
+  double hit_rate = 5;
+  int64 eviction_count = 6;
+  double utilization = 7;
+}
+
+// 热点Key
+message HotKey {
+  string key = 1;
+  int64 access_count = 2;
+  int64 size_bytes = 3;
+  google.protobuf.Timestamp last_access = 4;
+}
+
+// 性能指标
+message PerformanceMetrics {
+  // 延迟统计（微秒）
+  LatencyMetrics get_latency = 1;
+  LatencyMetrics set_latency = 2;
+  LatencyMetrics delete_latency = 3;
+
+  // 吞吐量（ops/s）
+  double get_throughput = 4;
+  double set_throughput = 5;
+  double delete_throughput = 6;
+  double total_throughput = 7;
+
+  // 并发统计
+  int32 active_requests = 8;
+  int32 pending_requests = 9;
+  int32 rejected_requests = 10;
+
+  // 批量操作
+  int64 batch_get_count = 11;
+  int64 batch_set_count = 12;
+  double avg_batch_size = 13;
+}
+
+// 延迟指标
+message LatencyMetrics {
+  double p50 = 1;  // 50th percentile
+  double p90 = 2;  // 90th percentile
+  double p95 = 3;  // 95th percentile
+  double p99 = 4;  // 99th percentile
+  double max = 5;
+  double min = 6;
+  double avg = 7;
+}
+
+// 系统指标
+message SystemMetrics {
+  // CPU
+  double cpu_usage = 1;
+  double cpu_load_1m = 2;
+  double cpu_load_5m = 3;
+  double cpu_load_15m = 4;
+
+  // 内存
+  int64 memory_used = 5;
+  int64 memory_available = 6;
+  int64 memory_total = 7;
+  double memory_usage = 8;
+
+  // 磁盘
+  int64 disk_used = 9;
+  int64 disk_available = 10;
+  int64 disk_total = 11;
+  double disk_usage = 12;
+
+  // 网络
+  int64 network_in_bytes = 13;
+  int64 network_out_bytes = 14;
+  double network_in_rate = 15;
+  double network_out_rate = 16;
+
+  // Goroutine
+  int32 goroutine_count = 17;
+  int32 thread_count = 18;
+
+  // GC
+  int64 gc_pause_total = 19;
+  int32 gc_count = 20;
+  google.protobuf.Timestamp last_gc = 21;
+}
+
+// 集群指标
+message ClusterMetrics {
+  // 节点统计
+  int32 total_nodes = 1;
+  int32 healthy_nodes = 2;
+  int32 unhealthy_nodes = 3;
+
+  // 数据分布
+  int64 total_keys = 4;
+  int64 total_size_bytes = 5;
+  double data_skew = 6;
+
+  // 复制统计
+  int64 replication_lag = 7;
+  int32 replication_errors = 8;
+  double replication_rate = 9;
+
+  // 网络统计
+  int64 inter_node_requests = 10;
+  int64 inter_node_errors = 11;
+  double avg_rtt = 12;
+
+  // 负载均衡
+  map<string, NodeLoad> node_loads = 13;
+}
+
+// 节点负载
+message NodeLoad {
+  string node_id = 1;
+  int64 key_count = 2;
+  int64 size_bytes = 3;
+  double cpu_usage = 4;
+  double memory_usage = 5;
+  int32 request_count = 6;
+}
+
+// 聚合指标
+message AggregatedMetric {
+  string metric_name = 1;
+  double min = 2;
+  double max = 3;
+  double avg = 4;
+  double sum = 5;
+  int32 count = 6;
+  double p50 = 7;
+  double p90 = 8;
+  double p95 = 9;
+  double p99 = 10;
+}
+
+// 聚合类型
+enum AggregationType {
+  UNKNOWN = 0;
+  SUM = 1;
+  AVG = 2;
+  MIN = 3;
+  MAX = 4;
+  COUNT = 5;
+  PERCENTILE = 6;
+}

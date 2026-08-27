@@ -1,0 +1,165 @@
+# TurboCache 配置文件示例
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "120s"
+  max_header_bytes: 1048576  # 1MB
+
+# 缓存配置
+cache:
+  # L1本地缓存
+  l1:
+    enabled: true
+    max_size: 104857600      # 100MB
+    max_entries: 100000
+    ttl: "10m"
+    shard_count: 64
+    stats_window: "1m"
+
+  # L2分布式缓存
+  l2:
+    enabled: true
+    replication_factor: 2
+    consistency_level: "eventual"
+    sync_timeout: "5s"
+    backup_interval: "1h"
+
+  # 通用缓存配置
+  default_ttl: "1h"
+  max_key_size: 1024
+  max_value_size: 10485760   # 10MB
+  eviction_policy: "lru"     # lru, lfu, arc
+  eviction_interval: "1m"
+
+  # 保护机制
+  protection:
+    # 布隆过滤器（防穿透）
+    bloom_filter:
+      enabled: true
+      expected_items: 1000000
+      false_positive_rate: 0.01
+      refresh_interval: "1h"
+
+    # 负缓存
+    negative_cache:
+      enabled: true
+      ttl: "5m"
+      max_size: 10000
+
+    # SingleFlight（防击穿）
+    single_flight:
+      enabled: true
+
+    # 热点检测
+    hot_key_detection:
+      enabled: true
+      threshold: 100
+      window: "1m"
+      preload_margin: "10s"
+
+    # 熔断器（防雪崩）
+    circuit_breaker:
+      enabled: true
+      threshold: 10
+      timeout: "30s"
+      max_requests: 5
+      failure_ratio: 0.5
+
+# 集群配置
+cluster:
+  node_id: ""                # 为空时自动生成
+  region: "default"
+  zone: "default"
+  weight: 100
+  metadata:
+    datacenter: "dc1"
+    rack: "rack1"
+
+  # 服务发现
+  discovery:
+    type: "etcd"             # etcd, consul, static
+    endpoints:
+      - "localhost:2379"
+      - "localhost:2380"
+    username: ""
+    password: ""
+    register_path: "/turbocache/nodes"
+    lease_ttl: "30s"
+    heartbeat_interval: "10s"
+    watch_timeout: "30s"
+    retry_interval: "5s"
+    max_retries: 3
+
+  # 一致性哈希
+  hash:
+    algorithm: "consistent"   # consistent, rendezvous
+    virtual_nodes: 150
+    hash_function: "crc32"    # crc32, sha1, sha256
+    rebalance_threshold: 0.1
+
+  # 数据复制
+  replication:
+    factor: 2
+    sync_mode: "async"        # sync, async
+    sync_timeout: "5s"
+    retry_interval: "1s"
+    max_retries: 3
+
+# 通信层配置
+transport:
+  # gRPC配置
+  grpc:
+    enabled: true
+    port: 9090
+    max_recv_msg_size: 4194304   # 4MB
+    max_send_msg_size: 4194304   # 4MB
+    connection_timeout: "5s"
+    keepalive_time: "30s"
+    keepalive_timeout: "5s"
+    max_connection_idle: "5m"
+    tls:
+      enabled: false
+      cert_file: ""
+      key_file: ""
+      ca_file: ""
+
+  # HTTP配置（兼容性接口）
+  http:
+    enabled: false
+    port: 8081
+
+  # 连接池配置
+  pool:
+    max_size: 100
+    min_size: 10
+    max_idle_time: "5m"
+    dial_timeout: "5s"
+    health_check_interval: "30s"
+
+# 监控配置
+metrics:
+  enabled: true
+  port: 2112
+  path: "/metrics"
+  interval: "15s"
+
+  # Prometheus集成
+  prometheus:
+    enabled: true
+    namespace: "turbocache"
+    subsystem: ""
+
+# 日志配置
+logger:
+  level: "info"              # debug, info, warn, error
+  format: "json"             # json, text
+  output: "stdout"           # stdout, stderr, file
+  file: "/var/log/turbocache/server.log"
+  max_size: 100              # MB
+  max_age: 30                # days
+  max_backups: 10
+  compress: true

@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  # --- etcd 集群 ---
+  etcd1:
+    image: quay.io/coreos/etcd:v3.5.10
+    container_name: turbocache-etcd1
+    networks:
+      - turbocache-net
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    environment:
+      - ETCD_NAME=etcd1
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd1:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd1:2379
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=turbocache-cluster
+    volumes:
+      - etcd1-data:/etcd-data
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  etcd2:
+    image: quay.io/coreos/etcd:v3.5.10
+    container_name: turbocache-etcd2
+    networks:
+      - turbocache-net
+    ports:
+      - "22379:2379"
+      - "22380:2380"
+    environment:
+      - ETCD_NAME=etcd2
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd2:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd2:2379
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=turbocache-cluster
+    volumes:
+      - etcd2-data:/etcd-data
+
+  etcd3:
+    image: quay.io/coreos/etcd:v3.5.10
+    container_name: turbocache-etcd3
+    networks:
+      - turbocache-net
+    ports:
+      - "32379:2379"
+      - "32380:2380"
+    environment:
+      - ETCD_NAME=etcd3
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd3:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd3:2379
+      - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=turbocache-cluster
+    volumes:
+      - etcd3-data:/etcd-data
+
+  # --- TurboCache 节点 ---
+  turbocache1:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    container_name: turbocache-node1
+    depends_on:
+      etcd1:
+        condition: service_healthy
+    networks:
+      - turbocache-net
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+      - "2112:2112"
+    environment:
+      - TURBOCACHE_NODE_ID=node1
+      - TURBOCACHE_REGION=us-east-1
+      - TURBOCACHE_ZONE=us-east-1a
+      - TURBOCACHE_ETCD_ENDPOINTS=etcd1:2379,etcd2:2379,etcd3:2379
+      - TURBOCACHE_ETCD_LEASE_TTL=10s      # 修复 NewTicker(0) 崩溃的关键配置
+      - TURBOCACHE_ETCD_DIAL_TIMEOUT=5s
+    volumes:
+      - ./config.yaml:/app/config/config.yaml
+    command: ["--config", "/app/config/config.yaml"]
+
+  turbocache2:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    container_name: turbocache-node2
+    depends_on:
+      etcd1:
+        condition: service_healthy
+    networks:
+      - turbocache-net
+    ports:
+      - "8081:8080"
+      - "9091:9090"
+      - "2113:2112"
+    environment:
+      - TURBOCACHE_NODE_ID=node2
+      - TURBOCACHE_REGION=us-east-1
+      - TURBOCACHE_ZONE=us-east-1b
+      - TURBOCACHE_ETCD_ENDPOINTS=etcd1:2379,etcd2:2379,etcd3:2379
+      - TURBOCACHE_ETCD_LEASE_TTL=10s      # 修复 NewTicker(0) 崩溃的关键配置
+      - TURBOCACHE_ETCD_DIAL_TIMEOUT=5s
+    volumes:
+      - ./config.yaml:/app/config/config.yaml
+    command: ["--config", "/app/config/config.yaml"]
+
+  turbocache3:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    container_name: turbocache-node3
+    depends_on:
+      etcd1:
+        condition: service_healthy
+    networks:
+      - turbocache-net
+    ports:
+      - "8082:8080"
+      - "9092:9090"
+      - "2114:2112"
+    environment:
+      - TURBOCACHE_NODE_ID=node3
+      - TURBOCACHE_REGION=us-east-1
+      - TURBOCACHE_ZONE=us-east-1c
+      - TURBOCACHE_ETCD_ENDPOINTS=etcd1:2379,etcd2:2379,etcd3:2379
+      - TURBOCACHE_ETCD_LEASE_TTL=10s      # 修复 NewTicker(0) 崩溃的关键配置
+      - TURBOCACHE_ETCD_DIAL_TIMEOUT=5s
+    volumes:
+      - ./config.yaml:/app/config/config.yaml
+    command: ["--config", "/app/config/config.yaml"]
+
+  # --- 监控组件 ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: turbocache-prometheus
+    networks:
+      - turbocache-net
+    ports:
+      - "9093:9090"
+    volumes:
+      - ../../monitoring/prometheus/provisioning/config.yaml:/etc/prometheus/prometheus.yml
+      - ../../monitoring/prometheus/provisioning/rules:/etc/prometheus/rules
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: turbocache-grafana
+    depends_on:
+      - prometheus
+    networks:
+      - turbocache-net
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../../monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+
+networks:
+  turbocache-net:
+    driver: bridge
+
+volumes:
+  etcd1-data:
+  etcd2-data:
+  etcd3-data:
+  prometheus-data:
+  grafana-data:

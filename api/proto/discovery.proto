@@ -1,0 +1,248 @@
+syntax = "proto3";
+
+package discoverypb;
+
+option go_package = "turbocache/api/generated/discoverypb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// 服务发现服务定义
+service DiscoveryService {
+  // 节点注册
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // 节点注销
+  rpc Deregister(DeregisterRequest) returns (DeregisterResponse);
+
+  // 心跳保活
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // 获取节点列表
+  rpc ListNodes(ListNodesRequest) returns (ListNodesResponse);
+
+  // 获取节点信息
+  rpc GetNode(GetNodeRequest) returns (GetNodeResponse);
+
+  // 监听节点变化
+  rpc WatchNodes(WatchNodesRequest) returns (stream NodeEvent);
+
+  // 更新节点元数据
+  rpc UpdateMetadata(UpdateMetadataRequest) returns (UpdateMetadataResponse);
+
+  // 节点健康检查
+  rpc HealthCheck(NodeHealthCheckRequest) returns (NodeHealthCheckResponse);
+}
+
+// 注册请求
+message RegisterRequest {
+  NodeInfo node = 1;
+  google.protobuf.Duration lease_ttl = 2;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string node_id = 2;
+  string lease_id = 3;
+  string message = 4;
+}
+
+// 注销请求
+message DeregisterRequest {
+  string node_id = 1;
+}
+
+message DeregisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 心跳请求
+message HeartbeatRequest {
+  string node_id = 1;
+  NodeStatus status = 2;
+  map<string, string> metadata = 3;
+}
+
+message HeartbeatResponse {
+  bool success = 1;
+  google.protobuf.Timestamp next_heartbeat = 2;
+  repeated string actions = 3; // 服务端指令
+}
+
+// 节点列表请求
+message ListNodesRequest {
+  string region = 1;
+  string zone = 2;
+  NodeStatus status = 3;
+  map<string, string> labels = 4;
+}
+
+message ListNodesResponse {
+  repeated NodeInfo nodes = 1;
+  int32 total_count = 2;
+}
+
+// 获取节点请求
+message GetNodeRequest {
+  string node_id = 1;
+}
+
+message GetNodeResponse {
+  NodeInfo node = 1;
+  bool found = 2;
+}
+
+// 监听节点变化
+message WatchNodesRequest {
+  string region = 1;
+  string zone = 2;
+  repeated EventType event_types = 3;
+}
+
+message NodeEvent {
+  EventType type = 1;
+  NodeInfo node = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// 更新元数据
+message UpdateMetadataRequest {
+  string node_id = 1;
+  map<string, string> metadata = 2;
+  repeated string delete_keys = 3;
+}
+
+message UpdateMetadataResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 健康检查
+message NodeHealthCheckRequest {
+  string node_id = 1;
+}
+
+message NodeHealthCheckResponse {
+  NodeStatus status = 1;
+  HealthDetails details = 2;
+}
+
+// 节点信息
+message NodeInfo {
+  // 基本信息
+  string node_id = 1;
+  string address = 2;
+  int32 port = 3;
+  int32 grpc_port = 4;
+  int32 http_port = 5;
+
+  // 位置信息
+  string region = 6;
+  string zone = 7;
+  string datacenter = 8;
+
+  // 状态信息
+  NodeStatus status = 9;
+  int32 weight = 10;
+
+  // 能力信息
+  NodeCapabilities capabilities = 11;
+
+  // 资源信息
+  ResourceInfo resources = 12;
+
+  // 元数据
+  map<string, string> metadata = 13;
+
+  // 时间戳
+  google.protobuf.Timestamp registered_at = 14;
+  google.protobuf.Timestamp last_heartbeat = 15;
+  google.protobuf.Timestamp updated_at = 16;
+
+  // 版本信息
+  string version = 17;
+  string build = 18;
+}
+
+// 节点状态
+enum NodeStatus {
+  UNKNOWN = 0;
+  STARTING = 1;
+  HEALTHY = 2;
+  UNHEALTHY = 3;
+  LEAVING = 4;
+  LEFT = 5;
+  FAILED = 6;
+}
+
+// 事件类型
+enum EventType {
+  EVENT_UNKNOWN = 0;
+  NODE_ADDED = 1;
+  NODE_UPDATED = 2;
+  NODE_REMOVED = 3;
+  NODE_FAILED = 4;
+  NODE_RECOVERED = 5;
+}
+
+// 节点能力
+message NodeCapabilities {
+  bool l1_cache = 1;
+  bool l2_cache = 2;
+  bool replication = 3;
+  bool persistence = 4;
+  bool compression = 5;
+  bool encryption = 6;
+  repeated string features = 7;
+}
+
+// 资源信息
+message ResourceInfo {
+  // CPU
+  int32 cpu_cores = 1;
+  double cpu_usage = 2;
+
+  // 内存
+  int64 memory_total = 3;
+  int64 memory_used = 4;
+  int64 memory_available = 5;
+
+  // 磁盘
+  int64 disk_total = 6;
+  int64 disk_used = 7;
+  int64 disk_available = 8;
+
+  // 网络
+  int64 network_in_bytes = 9;
+  int64 network_out_bytes = 10;
+
+  // 缓存
+  int64 cache_size = 11;
+  int64 cache_entries = 12;
+  int64 cache_hit_rate = 13;
+
+  // 连接数
+  int32 active_connections = 14;
+  int32 max_connections = 15;
+}
+
+// 健康详情
+message HealthDetails {
+  bool cache_healthy = 1;
+  bool storage_healthy = 2;
+  bool network_healthy = 3;
+  bool replication_healthy = 4;
+
+  repeated HealthCheck checks = 5;
+
+  string message = 6;
+  google.protobuf.Timestamp checked_at = 7;
+}
+
+message HealthCheck {
+  string name = 1;
+  bool passed = 2;
+  string message = 3;
+  google.protobuf.Duration duration = 4;
+}

@@ -1,0 +1,66 @@
+{
+  "TotalOps": 237019,
+  "SuccessOps": 237019,
+  "FailedOps": 0,
+  "TotalDuration": 5001896292,
+  "AvgLatency": 2103485,
+  "MinLatency": 352334,
+  "MaxLatency": 25072916,
+  "P50Latency": 1686583,
+  "P95Latency": 4733833,
+  "P99Latency": 8624833,
+  "Throughput": 47385.828526490375,
+  "SuccessThroughput": 47385.828526490375,
+  "ErrorRate": 0,
+  "Servers": [
+    "127.0.0.1:7071",
+    "127.0.0.1:7072",
+    "127.0.0.1:7073"
+  ],
+  "Concurrency": 100,
+  "ValueSize": 128,
+  "ReadRatio": 1,
+  "KeyRange": 10000,
+  "Samples": [
+    {
+      "second": 0,
+      "operations": 63972,
+      "successful": 63972,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 12.457208
+    },
+    {
+      "second": 1,
+      "operations": 45879,
+      "successful": 45879,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 17.995375
+    },
+    {
+      "second": 2,
+      "operations": 41556,
+      "successful": 41556,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 16.664584
+    },
+    {
+      "second": 3,
+      "operations": 43630,
+      "successful": 43630,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 25.072916
+    },
+    {
+      "second": 4,
+      "operations": 41982,
+      "successful": 41982,
+      "failed": 0,
+      "success_rate": 1,
+      "max_latency_ms": 17.31775
+    }
+  ]
+}

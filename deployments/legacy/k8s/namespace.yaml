@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: turbocache
+  labels:
+    name: turbocache
+    app.kubernetes.io/name: turbocache
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: turbocache-system
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: turbocache
+  namespace: turbocache
+  labels:
+    app: turbocache
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: turbocache
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "endpoints", "services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: turbocache
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: turbocache
+subjects:
+  - kind: ServiceAccount
+    name: turbocache
+    namespace: turbocache
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: turbocache-config
+  namespace: turbocache
+  labels:
+    app: turbocache
+data:
+  config.yaml: |
+    # TurboCache Kubernetes配置
+    server:
+      host: "0.0.0.0"
+      port: 8080
+      read_timeout: "30s"
+      write_timeout: "30s"
+      idle_timeout: "120s"
+
+    cache:
+      l1:
+        enabled: true
+        max_size: 268435456      # 256MB
+        max_entries: 500000
+        ttl: "10m"
+        shard_count: 64
+      l2:
+        enabled: true
+        replication_factor: 2
+        consistency_level: "eventual"
+        sync_timeout: "5s"
+      default_ttl: "1h"
+      eviction_policy: "lru"
+      protection:
+        bloom_filter:
+          enabled: true
+          expected_items: 1000000
+          false_positive_rate: 0.01
+        negative_cache:
+          enabled: true
+          ttl: "5m"
+          max_size: 10000
+        single_flight:
+          enabled: true
+        circuit_breaker:
+          enabled: true
+          threshold: 10
+          timeout: "30s"
+
+    cluster:
+      node_id: ""
+      region: "k8s-region"
+      zone: "k8s-zone"
+      weight: 100
+      discovery:
+        type: "etcd"
+        endpoints:
+          - "etcd-client.etcd.svc.cluster.local:2379"
+        register_path: "/turbocache/nodes"
+        lease_ttl: "30s"
+        heartbeat_interval: "10s"
+      hash:
+        algorithm: "consistent"
+        virtual_nodes: 150
+        hash_function: "crc32"
+      replication:
+        factor: 2
+        sync_mode: "async"
+
+    transport:
+      grpc:
+        enabled: true
+        port: 9090
+        max_recv_msg_size: 4194304
+        max_send_msg_size: 4194304
+        keepalive_time: "30s"
+        keepalive_timeout: "5s"
+      pool:
+        max_size: 100
+        min_size: 10
+        max_idle_time: "5m"
+
+    metrics:
+      enabled: true
+      port: 2112
+      path: "/metrics"
+      prometheus:
+        enabled: true
+        namespace: "turbocache"
+
+    logger:
+      level: "info"
+      format: "json"
+      output: "stdout"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: turbocache-secret
+  namespace: turbocache
+  labels:
+    app: turbocache
+type: Opaque
+data:
+# 这里可以存储敏感配置，如TLS证书、密钥等
+# etcd_username: ""
+# etcd_password: ""

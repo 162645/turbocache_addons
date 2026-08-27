@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurboCache Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="icon">🚀</span>
+                <h1>TurboCache</h1>
+            </div>
+            <nav>
+                <a href="#" class="active"><span class="nav-icon">📊</span> 仪表盘</a>
+                <a href="#"><span class="nav-icon">🖥️</span> 节点管理</a>
+                <a href="#"><span class="nav-icon">⚙️</span> 系统设置</a>
+            </nav>
+            <div class="version-info">
+                v1.0.0
+            </div>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h2>实时监控仪表盘</h2>
+                <div class="status-badge healthy">集群运行正常</div>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">总请求数</div>
+                    <div class="stat-value" id="total-requests">0</div>
+                    <div class="stat-trend neutral">实时更新中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">总命中率</div>
+                    <div class="stat-value" id="hit-rate">0%</div>
+                    <div class="stat-trend positive">↑ 1.2%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">L1 缓存大小</div>
+                    <div class="stat-value" id="l1-size">0 MB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">L2 缓存大小</div>
+                    <div class="stat-value" id="l2-size">0 MB</div>
+                </div>
+            </section>
+
+            <section class="charts-section">
+                <div class="chart-container glass">
+                    <h3>QPS & 命中率趋势</h3>
+                    <canvas id="metricsChart"></canvas>
+                </div>
+                <div class="nodes-status glass">
+                    <h3>集群节点状态</h3>
+                    <ul id="node-list" class="node-list">
+                        <!-- 节点列表将通过 JS 动态填充 -->
+                        <li class="loading">正在加载节点信息...</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html>

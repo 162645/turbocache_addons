@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package cachepb;
+
+option go_package = "turbocache/api/generated/cachepb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// 缓存服务定义
+service CacheService {
+  // 单个操作
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Set(SetRequest) returns (SetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // 批量操作
+  rpc BatchGet(BatchGetRequest) returns (BatchGetResponse);
+  rpc BatchSet(BatchSetRequest) returns (BatchSetResponse);
+  rpc BatchDelete(BatchDeleteRequest) returns (BatchDeleteResponse);
+
+  // 统计信息
+  rpc Stats(StatsRequest) returns (StatsResponse);
+
+  // 健康检查
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // 缓存管理
+  rpc Clear(ClearRequest) returns (ClearResponse);
+  rpc Expire(ExpireRequest) returns (ExpireResponse);
+  rpc TTL(TTLRequest) returns (TTLResponse);
+}
+
+// 请求消息
+message GetRequest {
+  string key = 1;
+  string group = 2; // 缓存组
+  RequestMetadata metadata = 3;
+}
+
+message SetRequest {
+  string key = 1;
+  bytes value = 2;
+  string group = 3;
+  google.protobuf.Duration ttl = 4;
+  RequestMetadata metadata = 5;
+  SetOptions options = 6;
+}
+
+message DeleteRequest {
+  string key = 1;
+  string group = 2;
+  RequestMetadata metadata = 3;
+}
+
+message BatchGetRequest {
+  repeated string keys = 1;
+  string group = 2;
+  RequestMetadata metadata = 3;
+}
+
+message BatchSetRequest {
+  repeated SetItem items = 1;
+  string group = 2;
+  RequestMetadata metadata = 3;
+}
+
+message BatchDeleteRequest {
+  repeated string keys = 1;
+  string group = 2;
+  RequestMetadata metadata = 3;
+}
+
+message StatsRequest {
+  string group = 1;
+  RequestMetadata metadata = 2;
+}
+
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message ClearRequest {
+  string group = 1;
+  RequestMetadata metadata = 2;
+}
+
+message ExpireRequest {
+  string key = 1;
+  string group = 2;
+  google.protobuf.Duration ttl = 3;
+  RequestMetadata metadata = 4;
+}
+
+message TTLRequest {
+  string key = 1;
+  string group = 2;
+  RequestMetadata metadata = 3;
+}
+
+// 响应消息
+message GetResponse {
+  bytes value = 1;
+  bool found = 2;
+  CacheMetadata metadata = 3;
+  ResponseStatus status = 4;
+}
+
+message SetResponse {
+  bool success = 1;
+  ResponseStatus status = 2;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  bool found = 2;
+  ResponseStatus status = 3;
+}
+
+message BatchGetResponse {
+  repeated GetResult results = 1;
+  ResponseStatus status = 2;
+}
+
+message BatchSetResponse {
+  repeated SetResult results = 1;
+  ResponseStatus status = 2;
+}
+
+message BatchDeleteResponse {
+  repeated DeleteResult results = 1;
+  ResponseStatus status = 2;
+}
+
+message StatsResponse {
+  CacheStats stats = 1;
+  ResponseStatus status = 2;
+}
+
+message HealthCheckResponse {
+  HealthStatus status = 1;
+  string message = 2;
+  map<string, string> metadata = 3;
+}
+
+message ClearResponse {
+  int64 cleared_count = 1;
+  ResponseStatus status = 2;
+}
+
+message ExpireResponse {
+  bool success = 1;
+  ResponseStatus status = 2;
+}
+
+message TTLResponse {
+  google.protobuf.Duration ttl = 1;
+  bool found = 2;
+  ResponseStatus status = 3;
+}
+
+// 辅助消息类型
+message RequestMetadata {
+  string request_id = 1;
+  string client_id = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  map<string, string> headers = 4;
+}
+
+message ResponseStatus {
+  int32 code = 1;
+  string message = 2;
+  string error_type = 3;
+}
+
+message CacheMetadata {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp accessed_at = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  int64 access_count = 4;
+  int64 size_bytes = 5;
+  string node_id = 6;
+  CacheLevel level = 7;
+}
+
+message SetOptions {
+  bool if_not_exists = 1; // NX 操作
+  bool if_exists = 2;     // XX 操作
+  google.protobuf.Timestamp expire_at = 3; // 绝对过期时间
+}
+
+message SetItem {
+  string key = 1;
+  bytes value = 2;
+  google.protobuf.Duration ttl = 3;
+  SetOptions options = 4;
+}
+
+message GetResult {
+  string key = 1;
+  bytes value = 2;
+  bool found = 3;
+  CacheMetadata metadata = 4;
+}
+
+message SetResult {
+  string key = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message DeleteResult {
+  string key = 1;
+  bool success = 2;
+  bool found = 3;
+  string error = 4;
+}
+
+message CacheStats {
+  int64 total_keys = 1;
+  int64 total_size_bytes = 2;
+  int64 hit_count = 3;
+  int64 miss_count = 4;
+  int64 eviction_count = 5;
+  double hit_rate = 6;
+  map<string, int64> level_stats = 7; // L1, L2 统计
+  google.protobuf.Timestamp last_updated = 8;
+}
+
+// 枚举类型
+enum HealthStatus {
+  UNKNOWN = 0;
+  SERVING = 1;
+  NOT_SERVING = 2;
+  SERVICE_UNKNOWN = 3;
+}
+
+enum CacheLevel {
+  UNKNOWN_LEVEL = 0;
+  L1_LOCAL = 1;
+  L2_DISTRIBUTED = 2;
+}

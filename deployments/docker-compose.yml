@@ -1,0 +1,176 @@
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.13
+    command:
+      - /usr/local/bin/etcd
+      - --name
+      - etcd0
+      - --data-dir
+      - /etcd-data
+      - --advertise-client-urls
+      - http://etcd:2379
+      - --listen-client-urls
+      - http://0.0.0.0:2379
+      - --listen-peer-urls
+      - http://0.0.0.0:2380
+      - --initial-advertise-peer-urls
+      - http://etcd:2380
+      - --initial-cluster
+      - etcd0=http://etcd:2380
+      - --initial-cluster-state
+      - new
+      - --initial-cluster-token
+      - turbocache-etcd
+    ports:
+      - "127.0.0.1:2379:2379"
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://127.0.0.1:2379", "endpoint", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment:
+      ETCDCTL_API: "3"
+
+  turbocache-1:
+    image: turbocache:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      TC_NODE_ID: node-1
+      TC_GRPC_ADDR: :7070
+      TC_ADVERTISE_ADDR: turbocache-1:7070
+      TC_METRICS_ADDR: :9090
+      TC_ETCD_ENDPOINTS: http://etcd:2379
+      TC_ETCD_PATH: /turbocache/nodes
+      TC_ETCD_LEASE_TTL: 10s
+      TC_HASH_REPLICAS: "128"
+      TC_FORWARD_MAX_DEPTH: "3"
+      TC_PROMOTE_ON_FORWARD: "true"
+      TC_NODE_WEIGHT: "1"
+      TC_HEALTH_CHECK: "true"
+      TC_HC_INTERVAL: 5s
+      TC_HC_TIMEOUT: 2s
+      TC_EVICTION_POLICY: lru
+      TC_L2_ENABLED: "${TC_BENCH_L2_ENABLED:-true}"
+      TC_REPLICATION_FACTOR: "${TC_BENCH_REPLICATION_FACTOR:-2}"
+      TC_CONSISTENCY: "${TC_BENCH_CONSISTENCY:-strong}"
+      TC_SINGLEFLIGHT_ENABLED: "${TC_BENCH_SINGLEFLIGHT_ENABLED:-true}"
+      TC_CIRCUIT_BREAKER_ENABLED: "${TC_BENCH_CIRCUIT_BREAKER_ENABLED:-true}"
+      TC_NEGATIVE_CACHE_ENABLED: "${TC_BENCH_NEGATIVE_CACHE_ENABLED:-true}"
+      TC_BLOOM_ENABLED: "${TC_BENCH_BLOOM_ENABLED:-true}"
+      TC_BLOOM_EXPECTED_ITEMS: "200000"
+      TC_BLOOM_FALSE_POSITIVE_RATE: "0.01"
+      TC_BLOOM_BATCH_SIZE: "100"
+      TC_BLOOM_FLUSH_INTERVAL: "1ms"
+      TC_BLOOM_REBUILD_INTERVAL: "5m"
+      TC_BLOOM_BOOTSTRAP_DELAY: "${TC_BENCH_BLOOM_BOOTSTRAP_DELAY:-2s}"
+    depends_on:
+      etcd:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:7071:7070"
+      - "127.0.0.1:9091:9090"
+
+  turbocache-2:
+    image: turbocache:local
+    environment:
+      TC_NODE_ID: node-2
+      TC_GRPC_ADDR: :7070
+      TC_ADVERTISE_ADDR: turbocache-2:7070
+      TC_METRICS_ADDR: :9090
+      TC_ETCD_ENDPOINTS: http://etcd:2379
+      TC_ETCD_PATH: /turbocache/nodes
+      TC_ETCD_LEASE_TTL: 10s
+      TC_HASH_REPLICAS: "128"
+      TC_FORWARD_MAX_DEPTH: "3"
+      TC_PROMOTE_ON_FORWARD: "true"
+      TC_NODE_WEIGHT: "1"
+      TC_HEALTH_CHECK: "true"
+      TC_HC_INTERVAL: 5s
+      TC_HC_TIMEOUT: 2s
+      TC_EVICTION_POLICY: lfu
+      TC_L2_ENABLED: "${TC_BENCH_L2_ENABLED:-true}"
+      TC_REPLICATION_FACTOR: "${TC_BENCH_REPLICATION_FACTOR:-2}"
+      TC_CONSISTENCY: "${TC_BENCH_CONSISTENCY:-strong}"
+      TC_SINGLEFLIGHT_ENABLED: "${TC_BENCH_SINGLEFLIGHT_ENABLED:-true}"
+      TC_CIRCUIT_BREAKER_ENABLED: "${TC_BENCH_CIRCUIT_BREAKER_ENABLED:-true}"
+      TC_NEGATIVE_CACHE_ENABLED: "${TC_BENCH_NEGATIVE_CACHE_ENABLED:-true}"
+      TC_BLOOM_ENABLED: "${TC_BENCH_BLOOM_ENABLED:-true}"
+      TC_BLOOM_EXPECTED_ITEMS: "200000"
+      TC_BLOOM_FALSE_POSITIVE_RATE: "0.01"
+      TC_BLOOM_BATCH_SIZE: "100"
+      TC_BLOOM_FLUSH_INTERVAL: "1ms"
+      TC_BLOOM_REBUILD_INTERVAL: "5m"
+      TC_BLOOM_BOOTSTRAP_DELAY: "${TC_BENCH_BLOOM_BOOTSTRAP_DELAY:-2s}"
+    depends_on:
+      etcd:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:7072:7070"
+      - "127.0.0.1:9092:9090"
+
+  turbocache-3:
+    image: turbocache:local
+    environment:
+      TC_NODE_ID: node-3
+      TC_GRPC_ADDR: :7070
+      TC_ADVERTISE_ADDR: turbocache-3:7070
+      TC_METRICS_ADDR: :9090
+      TC_ETCD_ENDPOINTS: http://etcd:2379
+      TC_ETCD_PATH: /turbocache/nodes
+      TC_ETCD_LEASE_TTL: 10s
+      TC_HASH_REPLICAS: "128"
+      TC_FORWARD_MAX_DEPTH: "3"
+      TC_PROMOTE_ON_FORWARD: "true"
+      TC_NODE_WEIGHT: "1"
+      TC_HEALTH_CHECK: "true"
+      TC_HC_INTERVAL: 5s
+      TC_HC_TIMEOUT: 2s
+      TC_EVICTION_POLICY: arc
+      TC_L2_ENABLED: "${TC_BENCH_L2_ENABLED:-true}"
+      TC_REPLICATION_FACTOR: "${TC_BENCH_REPLICATION_FACTOR:-2}"
+      TC_CONSISTENCY: "${TC_BENCH_CONSISTENCY:-strong}"
+      TC_SINGLEFLIGHT_ENABLED: "${TC_BENCH_SINGLEFLIGHT_ENABLED:-true}"
+      TC_CIRCUIT_BREAKER_ENABLED: "${TC_BENCH_CIRCUIT_BREAKER_ENABLED:-true}"
+      TC_NEGATIVE_CACHE_ENABLED: "${TC_BENCH_NEGATIVE_CACHE_ENABLED:-true}"
+      TC_BLOOM_ENABLED: "${TC_BENCH_BLOOM_ENABLED:-true}"
+      TC_BLOOM_EXPECTED_ITEMS: "200000"
+      TC_BLOOM_FALSE_POSITIVE_RATE: "0.01"
+      TC_BLOOM_BATCH_SIZE: "100"
+      TC_BLOOM_FLUSH_INTERVAL: "1ms"
+      TC_BLOOM_REBUILD_INTERVAL: "5m"
+      TC_BLOOM_BOOTSTRAP_DELAY: "${TC_BENCH_BLOOM_BOOTSTRAP_DELAY:-2s}"
+    depends_on:
+      etcd:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:7073:7070"
+      - "127.0.0.1:9093:9090"
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    volumes:
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9095:9090"
+    depends_on:
+      - turbocache-1
+      - turbocache-2
+      - turbocache-3
+
+  grafana:
+    image: grafana/grafana:10.4.3
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+networks:
+  default:
+    name: turbocache-net

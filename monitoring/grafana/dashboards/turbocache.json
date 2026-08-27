@@ -1,0 +1,80 @@
+{
+  "uid": "turbocache",
+  "title": "TurboCache Overview",
+  "tags": ["turbocache", "cache"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "gRPC Requests (rate)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(rate(turbocache_grpc_requests_total[1m])) by (method, code)",
+          "legendFormat": "{{method}} {{code}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Cache GET Results (rate)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(rate(turbocache_cache_get_total[1m])) by (result)",
+          "legendFormat": "{{result}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "L1 Keys",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 9},
+      "targets": [
+        {"expr": "max(turbocache_l1_keys)", "legendFormat": "keys"}
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "L1 Bytes",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 9},
+      "targets": [
+        {"expr": "max(turbocache_l1_bytes)", "legendFormat": "bytes"}
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Ring Nodes",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 9},
+      "targets": [
+        {"expr": "max(turbocache_ring_nodes)", "legendFormat": "nodes"}
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "gRPC Latency P95 (seconds)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 9},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(turbocache_grpc_request_duration_seconds_bucket[1m])) by (le, method))",
+          "legendFormat": "{{method}}"
+        }
+      ]
+    }
+  ]
+}
